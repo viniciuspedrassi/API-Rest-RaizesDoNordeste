@@ -1,0 +1,576 @@
+{
+  "info": {
+    "_postman_id": "d467b796-40d8-437a-8dd6-dff4830e338b",
+    "name": "Raízes do Nordeste - API Back-End",
+    "description": "# **Raízes do Nordeste — API Back-End**\n\nColeção de testes da API REST desenvolvida com Java, Spring Boot e MySQL.\n\n## Pré-requisitos\n\n- Aplicação Spring Boot em execução na porta 8080.\n    \n- Banco MySQL configurado e com os dados necessários para os testes.\n    \n- Produtos, unidade, cliente e usuários de teste cadastrados.\n    \n- Estoque disponível do produto 1 na unidade 1.\n    \n\n## Variáveis do ambiente\n\nUtilizar o ambiente **Raízes do Nordeste - Local** com as seguintes variáveis:\n\n- `baseUrl`: endereço local da API.\n    \n- `adminEmail`: e-mail do administrador.\n    \n- `adminSenha`: senha do administrador.\n    \n- `token`: JWT do administrador.\n    \n- `tokenAtendente`: JWT de um usuário com perfil ATENDENTE.\n    \n- `pedidoId`: preenchido automaticamente pelo T07.\n    \n- `pedidoIdFidelidade`: preenchido automaticamente pela requisição auxiliar de fidelização.\n    \n\nOs valores secretos devem ser configurados localmente e não devem ser publicados.\n\n## Ordem de execução\n\n1. Executar T01 e obter o token de administrador.\n    \n2. Configurar os tokens necessários no ambiente.\n    \n3. Executar T02 a T06 conforme suas pré-condições.\n    \n4. Executar T07 para criar um pedido.\n    \n5. Executar T08 para aprovar o pagamento desse pedido.\n    \n6. Executar T09 e T10.\n    \n7. Executar **Preparação - Criar pedido para T11**.\n    \n8. Executar T11 para verificar o bloqueio por saldo insuficiente.\n    \n9. Executar T12 para verificar o bloqueio de pagamento já processado.\n    \n\n## Observações\n\nOs testes T07, T08 e T12 compartilham a variável `pedidoId`.\n\nO T11 utiliza um pedido separado, identificado por `pedidoIdFidelidade`.\n\nA aprovação do pagamento altera o estoque e o saldo de fidelidade. Para repetir os testes positivos de pagamento, é necessário criar um novo pedido e garantir estoque suficiente.\n\nOs testes devem retornar códigos HTTP e respostas compatíveis com as regras de negócio implementadas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "45579899",
+    "_collection_link": "https://go.postman.co/collection/45579899-d467b796-40d8-437a-8dd6-dff4830e338b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Autenticação",
+      "item": [
+        {
+          "name": "T01 - Login válido (200)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"{{adminEmail}}\",\r\n  \"senha\": \"{{adminSenha}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T02 - Acesso sem token (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?canalPedido=BALCAO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "canalPedido",
+                  "value": "BALCAO"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T03 - Atendente sem permissão (403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAtendente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Produtos e Estoque",
+      "item": [
+        {
+          "name": "T04: Listar produtos (200)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T05 - Produto inexistente (404)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T06 - Consultar estoque (200)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/estoques?produtoId=1&unidadeId=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "estoques"
+              ],
+              "query": [
+                {
+                  "key": "produtoId",
+                  "value": "1"
+                },
+                {
+                  "key": "unidadeId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Pedidos",
+      "item": [
+        {
+          "name": "T07: Criar pedido (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"T07 - Pedido criado com sucesso\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const pedido = pm.response.json();\r\n\r\n    pm.environment.set(\"pedidoId\", pedido.id);\r\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?unidadeId=1&clienteId=1&canalPedido=BALCAO&produtoIds=1&quantidades=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "unidadeId",
+                  "value": "1"
+                },
+                {
+                  "key": "clienteId",
+                  "value": "1"
+                },
+                {
+                  "key": "canalPedido",
+                  "value": "BALCAO"
+                },
+                {
+                  "key": "produtoIds",
+                  "value": "1"
+                },
+                {
+                  "key": "quantidades",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T09 - Atualizar pedido inexistente (404)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/99999/status?novoStatus=EM_PREPARACAO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "99999",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "novoStatus",
+                  "value": "EM_PREPARACAO"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T10: Consultar pedidos por canal (200)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAtendente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?canalPedido=BALCAO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "canalPedido",
+                  "value": "BALCAO"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Pagamentos",
+      "item": [
+        {
+          "name": "T08: Aprovar pagamento (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"T08 - Pagamento aprovado\", function () {\r\n    pm.response.to.have.status(200);\r\n\r\n    const pedido = pm.response.json();\r\n    pm.expect(pedido.status).to.eql(\"RECEBIDO\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/simular?pedidoId={{pedidoId}}&aprovado=true&pontosResgatar=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagamentos",
+                "simular"
+              ],
+              "query": [
+                {
+                  "key": "pedidoId",
+                  "value": "{{pedidoId}}"
+                },
+                {
+                  "key": "aprovado",
+                  "value": "true"
+                },
+                {
+                  "key": "pontosResgatar",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Fidelização",
+      "item": [
+        {
+          "name": "Preparação - Criar pedido para T11",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pedido de teste criado\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const pedido = pm.response.json();\r\n    pm.environment.set(\"pedidoIdFidelidade\", pedido.id);\r\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?unidadeId=1&clienteId=1&canalPedido=BALCAO&produtoIds=1&quantidades=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "unidadeId",
+                  "value": "1"
+                },
+                {
+                  "key": "clienteId",
+                  "value": "1"
+                },
+                {
+                  "key": "canalPedido",
+                  "value": "BALCAO"
+                },
+                {
+                  "key": "produtoIds",
+                  "value": "1"
+                },
+                {
+                  "key": "quantidades",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T11 - Resgate com saldo insuficiente (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"T11 - Bloqueia resgate com saldo insuficiente\", function () {\r\n    pm.response.to.have.status(409);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/simular?pedidoId={{pedidoIdFidelidade}}&aprovado=true&pontosResgatar=1000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagamentos",
+                "simular"
+              ],
+              "query": [
+                {
+                  "key": "pedidoId",
+                  "value": "{{pedidoIdFidelidade}}"
+                },
+                {
+                  "key": "aprovado",
+                  "value": "true"
+                },
+                {
+                  "key": "pontosResgatar",
+                  "value": "1000"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - Segurança e Erros",
+      "item": [
+        {
+          "name": "T12: Pagamento já processado (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"T12 - Bloqueia pagamento ja processado\", function () {\r\n    pm.response.to.have.status(409);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/simular?pedidoId={{pedidoId}}&aprovado=true&pontosResgatar=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagamentos",
+                "simular"
+              ],
+              "query": [
+                {
+                  "key": "pedidoId",
+                  "value": "{{pedidoId}}"
+                },
+                {
+                  "key": "aprovado",
+                  "value": "true"
+                },
+                {
+                  "key": "pontosResgatar",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "json_web_token_0gwr",
+      "secret": true
+    }
+  ]
+}
