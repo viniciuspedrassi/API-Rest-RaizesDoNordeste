@@ -320,6 +320,285 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "T15 - Pedido com produto inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"T15 - Bloqueia pedido com produto inexistente\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?unidadeId=1&clienteId=1&canalPedido=BALCAO&produtoIds=99999&quantidades=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "unidadeId",
+                  "value": "1"
+                },
+                {
+                  "key": "clienteId",
+                  "value": "1"
+                },
+                {
+                  "key": "canalPedido",
+                  "value": "BALCAO"
+                },
+                {
+                  "key": "produtoIds",
+                  "value": "99999"
+                },
+                {
+                  "key": "quantidades",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T16 - Pedido com estoque insuficiente (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"T16 - Bloqueia pedido com estoque insuficiente\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?unidadeId=1&clienteId=1&canalPedido=BALCAO&produtoIds=1&quantidades=99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "unidadeId",
+                  "value": "1"
+                },
+                {
+                  "key": "clienteId",
+                  "value": "1"
+                },
+                {
+                  "key": "canalPedido",
+                  "value": "BALCAO"
+                },
+                {
+                  "key": "produtoIds",
+                  "value": "1"
+                },
+                {
+                  "key": "quantidades",
+                  "value": "99999"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Preparação - Criar pedido para T18",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Pedido para T18 criado\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const pedido = pm.response.json();\r\n    pm.environment.set(\"pedidoIdAuditoria\", pedido.id);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?unidadeId=1&clienteId=1&canalPedido=BALCAO&produtoIds=1&quantidades=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "unidadeId",
+                  "value": "1"
+                },
+                {
+                  "key": "clienteId",
+                  "value": "1"
+                },
+                {
+                  "key": "canalPedido",
+                  "value": "BALCAO"
+                },
+                {
+                  "key": "produtoIds",
+                  "value": "1"
+                },
+                {
+                  "key": "quantidades",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Preparação - Aprovar pagamento para T18",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Pagamento do T18 aprovado\", function () {\r\n    pm.response.to.have.status(200);\r\n\r\n    const pedido = pm.response.json();\r\n    pm.expect(pedido.status).to.eql(\"RECEBIDO\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/simular?pedidoId={{pedidoIdAuditoria}}&aprovado=true&pontosResgatar=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagamentos",
+                "simular"
+              ],
+              "query": [
+                {
+                  "key": "pedidoId",
+                  "value": "{{pedidoIdAuditoria}}"
+                },
+                {
+                  "key": "aprovado",
+                  "value": "true"
+                },
+                {
+                  "key": "pontosResgatar",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T18 - Auditoria de alteração de status (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"T18 - Alteracao de status registrada\", function () {\r\n    pm.response.to.have.status(200);\r\n\r\n    const pedido = pm.response.json();\r\n    pm.expect(pedido.status).to.eql(\"EM_PREPARACAO\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoIdAuditoria}}/status?novoStatus=EM_PREPARACAO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "{{pedidoIdAuditoria}}",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "novoStatus",
+                  "value": "EM_PREPARACAO"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -369,6 +648,119 @@
                 {
                   "key": "aprovado",
                   "value": "true"
+                },
+                {
+                  "key": "pontosResgatar",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Preparação - Criar pedido para T17",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"Pedido para T17 criado\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nif (pm.response.code === 200) {\r\n    const pedido = pm.response.json();\r\n    pm.environment.set(\"pedidoIdRecusado\", pedido.id);\r\n}\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?unidadeId=1&clienteId=1&canalPedido=BALCAO&produtoIds=1&quantidades=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "unidadeId",
+                  "value": "1"
+                },
+                {
+                  "key": "clienteId",
+                  "value": "1"
+                },
+                {
+                  "key": "canalPedido",
+                  "value": "BALCAO"
+                },
+                {
+                  "key": "produtoIds",
+                  "value": "1"
+                },
+                {
+                  "key": "quantidades",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T17 - Pagamento recusado (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"T17 - Pagamento recusado cancela pedido\", function () {\r\n    pm.response.to.have.status(200);\r\n\r\n    const pedido = pm.response.json();\r\n    pm.expect(pedido.status).to.eql(\"CANCELADO\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/simular?pedidoId={{pedidoIdRecusado}}&aprovado=false&pontosResgatar=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagamentos",
+                "simular"
+              ],
+              "query": [
+                {
+                  "key": "pedidoId",
+                  "value": "{{pedidoIdRecusado}}"
+                },
+                {
+                  "key": "aprovado",
+                  "value": "false"
                 },
                 {
                   "key": "pontosResgatar",
@@ -559,6 +951,80 @@
                   "key": "pontosResgatar",
                   "value": "0"
                 }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T13 – Cadastro sem nome (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"T13 - Bloqueia cadastro sem nome\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"email\": \"teste13@exemplo.com\",\r\n  \"senha\": \"Teste12345\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T14 - E-mail inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"T14 - Bloqueia cadastro com email invalido\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"nome\": \"Cliente Teste\",\r\n  \"email\": \"emailinvalido\",\r\n  \"senha\": \"Teste12345\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
               ]
             }
           },
